@@ -26,11 +26,12 @@ export class AudioRecorderElement extends MyMinElement {
   constructor () {
     super();
     this._duration = null;
+    this._startTime = null;
     this._chunks = [];
   }
 
   get audioBlob () { return this._audioBlob; }
-
+  get blobSize () { return this.audioBlob.size; }
   get duration () { return this._duration; }
 
   /* Deprecated */
@@ -48,6 +49,8 @@ export class AudioRecorderElement extends MyMinElement {
     <p part="row">
       <button name="startButton" part="button">Record</button>
       <button name="stopButton" part="button" disabled>Stop</button>
+      <button name="downloadButton" part="button" disabled>Download</button>
+      <a href="#" id="downloadLink" download="example" hidden></a>
       <output name="output"></output>
     </p>
   </form>
@@ -55,17 +58,18 @@ export class AudioRecorderElement extends MyMinElement {
 `;
   }
 
-  get _elements () {
-    return this.shadowRoot.querySelector('form').elements;
-  }
-
+  get _elements () { return this.shadowRoot.querySelector('form').elements; }
   get _audioElement () { return this.shadowRoot.querySelector('audio'); }
+  get _downloadLink () { return this.shadowRoot.querySelector('#downloadLink'); }
 
   connectedCallback () {
     this._attachLocalTemplate(this._template);
 
+    console.debug('EL:', this._elements);
+
     this._elements.startButton.addEventListener('click', (ev) => this._onStartClick(ev));
     this._elements.stopButton.addEventListener('click', (ev) => this._onStopClick(ev));
+    this._elements.downloadButton.addEventListener('click', (ev) => this._onDownloadClick(ev));
   }
 
   _getUserMedia () {
@@ -73,80 +77,96 @@ export class AudioRecorderElement extends MyMinElement {
     return navigator.mediaDevices.getUserMedia(constraints);
   }
 
-  _onStartClick (ev) {
-    ev.preventDefault();
-    this._getUserMedia().then((stream) => {
-      const audioTracks = stream.getAudioTracks();
+  _streamHandler (stream) {
+    const audioTracks = stream.getAudioTracks();
 
-      console.debug(`Using audio device: ${audioTracks[0].label}`);
+    console.debug(`Using audio device: ${audioTracks[0].label}`);
 
-      stream.onremovetrack = () => {
-        console.debug('Stream ended');
-      };
+    stream.onremovetrack = () => {
+      console.debug('Stream ended');
+    };
 
-      this._recorder = new MediaRecorder(stream);
+    this._recorder = new MediaRecorder(stream);
 
-      this._recorder.addEventListener('dataavailable', (dataEvent) => {
-        this._chunks.push(dataEvent.data);
-        this._fireEvent(dataEvent);
-      });
+    this._recorder.addEventListener('dataavailable', (dataEvent) => {
+      this._chunks.push(dataEvent.data);
+      this._fireEvent(dataEvent);
+    });
 
-      this._recorder.addEventListener('stop', (stopEvent) => {
-        const type = this._recorder.mimeType;
-        const audioBlob = this._audioBlob = new Blob(this._chunks, { type });
+    this._recorder.addEventListener('start', (startEvent) => {
+      this._fireEvent(startEvent, 'Recording…');
 
-        /* Deprecated */
-        if (this._stopCallbackFn) {
-          this._stopCallbackFn({ audioBlob, type });
-        }
+      this._startTime = startEvent.timeStamp;
+    });
 
-        this._audioElement.src = this.createAudioURL();
-        this._getAudioDuration();
+    this._recorder.addEventListener('stop', (stopEvent) => {
+      this._calculateDuration(stopEvent);
 
-        this._fireEvent(stopEvent, `Recording stopped (${this.duration})`);
+      const type = this._recorder.mimeType;
+      const audioBlob = this._audioBlob = new Blob(this._chunks, { type });
 
-        this._elements.startButton.disabled = false;
-        this._elements.stopButton.disabled = true;
-      });
+      /* Deprecated */
+      if (this._stopCallbackFn) {
+        this._stopCallbackFn({ audioBlob, type });
+      }
 
-      this._elements.startButton.disabled = true;
-      this._elements.stopButton.disabled = false;
+      this._audioElement.src = this.createAudioURL();
 
-      this._recorder.start();
-      this._fireEvent({
-        audioTracks,
-        audioDevice: audioTracks[0].label,
-        target: this._recorder,
-        type: 'start'
-      },
-      'Recording…');
-    })
-      .catch((error) => {
-        this._fireEvent({ error, type: 'error', target: this._recorder }, `Error: ${error.message}`);
-        console.warn('Audio Recorder Error:', error);
-      });
+      this._fireEvent(stopEvent, `Recording stopped (${this.duration})`);
+
+      this._elements.downloadButton.disabled = false;
+      this._elements.startButton.disabled = false;
+      this._elements.stopButton.disabled = true;
+    });
+
+    this._elements.startButton.disabled = true;
+    this._elements.stopButton.disabled = false;
+
+    this._recorder.start();
+    this._fireEvent({
+      audioTracks,
+      audioDevice: audioTracks[0].label,
+      target: this._recorder,
+      type: 'starting'
+    },
+    'Recording');
+  }
+
+  _errorHandler (error) {
+    this._fireEvent({ error, type: 'error', target: this._recorder }, `Error: ${error.message}`);
+    console.warn('Audio Recorder Error:', error);
   }
 
   createAudioURL () {
     return window.URL.createObjectURL(this.audioBlob);
   }
 
-  _getAudioDuration () {
-    this._audioElement.load();
-    this._audioElement.play();
-    setTimeout(() => {
-      this._duration = this._audioElement.duration;
-      console.debug('Duration:', this.duration);
-      this._audioElement.pause();
-      this._audioElement.load();
-    },
-    150); // 150ms is about correct, maybe?!
+  _calculateDuration (stopEvent) {
+    const milliseconds = parseInt(stopEvent.timeStamp - this._startTime);
+    this._duration = milliseconds / 1000;
+    this._startTime = null;
+  }
+
+  _onStartClick (ev) {
+    ev.preventDefault();
+    this._getUserMedia()
+      .then((stream) => this._streamHandler(stream))
+      .catch((error) => this._errorHandler(error));
   }
 
   _onStopClick (ev) {
     ev.preventDefault();
     this._recorder.stop();
-    console.debug('stop called:', ev);
+  }
+
+  _onDownloadClick (ev) {
+    ev.preventDefault();
+    const blobUrl = this.createAudioURL();
+    const size = this.blobSize;
+    const mimeType = this.audioBlob.type;
+    this._downloadLink.href = blobUrl;
+    this._downloadLink.click();
+    this._fireEvent({ type: 'download', blobUrl, size, mimeType, target: this._recorder });
   }
 
   _fireEvent (origEvent, message = null) {
