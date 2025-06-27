@@ -2,14 +2,19 @@ import MyMinElement from 'MyMinElement';
 
 const { Blob, customElements, Event, MediaRecorder, navigator } = window;
 
+/**
+ * @copyright © Nick Freear, June-2025.
+ */
 export class AudioRecorderEvent extends Event {
+  #origEvent;
+
   constructor (origEvent) {
     super('audio-recorder', { bubbles: true });
     // Was: super(`audio-recorder:${origEvent.type}`, { bubbles: true });
-    this._origEvent = origEvent;
+    this.#origEvent = origEvent;
   }
 
-  get origEvent () { return this._origEvent; }
+  get origEvent () { return this.#origEvent; }
   get origTarget () { return this.origEvent.target || {}; }
   get audioBitsPerSecond () { return this.origTarget.audioBitsPerSecond; }
   get mimeType () { return this.origTarget.mimeType || null; }
@@ -20,28 +25,23 @@ export class AudioRecorderEvent extends Event {
 }
 
 /**
+ * @copyright © Nick Freear, June-2025.
  * @customElement audio-recorder
  */
 export class AudioRecorderElement extends MyMinElement {
-  constructor () {
-    super();
-    this._duration = null;
-    this._startTime = null;
-    this._chunks = [];
-  }
+  #audioBlob;
+  #chunks = [];
+  #duration = null;
+  #startTime = null;
+  #recorder;
 
-  get audioBlob () { return this._audioBlob; }
+  /* constructor () { super(); } */
+
+  get audioBlob () { return this.#audioBlob; }
   get blobSize () { return this.audioBlob.size; }
-  get duration () { return this._duration; }
+  get duration () { return this.#duration; }
 
-  /* Deprecated */
-  set onstopevent (callbackFn) {
-    this._stopCallbackFn = callbackFn;
-  }
-
-  get onstopevent () { return this._stopCallbackFn; }
-
-  get _template () {
+  get #template () {
     return `
 <template>
   <form>
@@ -58,82 +58,77 @@ export class AudioRecorderElement extends MyMinElement {
 `;
   }
 
-  get _elements () { return this.shadowRoot.querySelector('form').elements; }
-  get _audioElement () { return this.shadowRoot.querySelector('audio'); }
-  get _downloadLink () { return this.shadowRoot.querySelector('#downloadLink'); }
+  get #elements () { return this.shadowRoot.querySelector('form').elements; }
+  get #audioElement () { return this.shadowRoot.querySelector('audio'); }
+  get #downloadLink () { return this.shadowRoot.querySelector('#downloadLink'); }
 
   connectedCallback () {
-    this._attachLocalTemplate(this._template);
+    this._attachLocalTemplate(this.#template);
 
-    console.debug('EL:', this._elements);
+    this.#elements.startButton.addEventListener('click', (ev) => this.#onStartClick(ev));
+    this.#elements.stopButton.addEventListener('click', (ev) => this.#onStopClick(ev));
+    this.#elements.downloadButton.addEventListener('click', (ev) => this.#onDownloadClick(ev));
 
-    this._elements.startButton.addEventListener('click', (ev) => this._onStartClick(ev));
-    this._elements.stopButton.addEventListener('click', (ev) => this._onStopClick(ev));
-    this._elements.downloadButton.addEventListener('click', (ev) => this._onDownloadClick(ev));
+    console.debug('audio-recorder:', [this]);
   }
 
-  _getUserMedia () {
+  #getUserMedia () {
     const constraints = { audio: true, video: false };
     return navigator.mediaDevices.getUserMedia(constraints);
   }
 
-  _streamHandler (stream) {
+  #streamHandler (stream) {
     const audioTracks = stream.getAudioTracks();
 
-    console.debug(`Using audio device: ${audioTracks[0].label}`);
+    // console.debug(`Using audio device: ${audioTracks[0].label}`);
 
     stream.onremovetrack = () => {
       console.debug('Stream ended');
     };
 
-    this._recorder = new MediaRecorder(stream);
+    this.#recorder = new MediaRecorder(stream);
 
-    this._recorder.addEventListener('dataavailable', (dataEvent) => {
-      this._chunks.push(dataEvent.data);
-      this._fireEvent(dataEvent);
+    this.#recorder.addEventListener('dataavailable', (dataEvent) => {
+      this.#chunks.push(dataEvent.data);
+      this.#fireEvent(dataEvent);
     });
 
-    this._recorder.addEventListener('start', (startEvent) => {
-      this._fireEvent(startEvent, 'Recording…');
+    this.#recorder.addEventListener('start', (startEvent) => {
+      this.#fireEvent(startEvent, 'Recording…');
 
-      this._startTime = startEvent.timeStamp;
+      this.#startTime = startEvent.timeStamp;
     });
 
-    this._recorder.addEventListener('stop', (stopEvent) => {
-      this._calculateDuration(stopEvent);
+    this.#recorder.addEventListener('stop', (stopEvent) => {
+      this.#calculateDuration(stopEvent);
 
-      const type = this._recorder.mimeType;
-      const audioBlob = this._audioBlob = new Blob(this._chunks, { type });
+      const type = this.#recorder.mimeType;
 
-      /* Deprecated */
-      if (this._stopCallbackFn) {
-        this._stopCallbackFn({ audioBlob, type });
-      }
+      this.#audioBlob = new Blob(this.#chunks, { type });
+      this.#audioElement.src = this.createAudioURL();
 
-      this._audioElement.src = this.createAudioURL();
+      this.#fireEvent(stopEvent, `Recording stopped (${this.duration})`);
 
-      this._fireEvent(stopEvent, `Recording stopped (${this.duration})`);
-
-      this._elements.downloadButton.disabled = false;
-      this._elements.startButton.disabled = false;
-      this._elements.stopButton.disabled = true;
+      this.#elements.downloadButton.disabled = false;
+      this.#elements.startButton.disabled = false;
+      this.#elements.stopButton.disabled = true;
     });
 
-    this._elements.startButton.disabled = true;
-    this._elements.stopButton.disabled = false;
+    this.#elements.startButton.disabled = true;
+    this.#elements.stopButton.disabled = false;
 
-    this._recorder.start();
-    this._fireEvent({
+    this.#recorder.start();
+    this.#fireEvent({
       audioTracks,
       audioDevice: audioTracks[0].label,
-      target: this._recorder,
+      target: this.#recorder,
       type: 'starting'
     },
     'Recording');
   }
 
-  _errorHandler (error) {
-    this._fireEvent({ error, type: 'error', target: this._recorder }, `Error: ${error.message}`);
+  #errorHandler (error) {
+    this.#fireEvent({ error, type: 'error', target: this.#recorder }, `Error: ${error.message}`);
     console.warn('Audio Recorder Error:', error);
   }
 
@@ -141,42 +136,41 @@ export class AudioRecorderElement extends MyMinElement {
     return window.URL.createObjectURL(this.audioBlob);
   }
 
-  _calculateDuration (stopEvent) {
-    const milliseconds = parseInt(stopEvent.timeStamp - this._startTime);
-    this._duration = milliseconds / 1000;
-    this._startTime = null;
+  #calculateDuration (stopEvent) {
+    const milliseconds = parseInt(stopEvent.timeStamp - this.#startTime);
+    this.#duration = milliseconds / 1000;
+    this.#startTime = null;
   }
 
-  _onStartClick (ev) {
+  #onStartClick (ev) {
     ev.preventDefault();
-    this._getUserMedia()
-      .then((stream) => this._streamHandler(stream))
-      .catch((error) => this._errorHandler(error));
+    this.#getUserMedia()
+      .then((stream) => this.#streamHandler(stream))
+      .catch((error) => this.#errorHandler(error));
   }
 
-  _onStopClick (ev) {
+  #onStopClick (ev) {
     ev.preventDefault();
-    this._recorder.stop();
+    this.#recorder.stop();
   }
 
-  _onDownloadClick (ev) {
+  #onDownloadClick (ev) {
     ev.preventDefault();
     const blobUrl = this.createAudioURL();
     const size = this.blobSize;
-    const mimeType = this.audioBlob.type;
-    this._downloadLink.href = blobUrl;
-    this._downloadLink.click();
-    this._fireEvent({ type: 'download', blobUrl, size, mimeType, target: this._recorder });
+    this.#downloadLink.href = blobUrl;
+    this.#downloadLink.click();
+    this.#fireEvent({ type: 'download', blobUrl, size, target: this.#recorder });
   }
 
-  _fireEvent (origEvent, message = null) {
+  #fireEvent (origEvent, message = null) {
     const event = new AudioRecorderEvent(origEvent);
     if (event.is('error')) {
       this.dataset.error = event.error.name;
     }
     this.dataset.state = event.eventName;
-    this._elements.output.setAttribute('part', `output ${event.eventName}`);
-    this._elements.output.value = message || event.message || event.eventName;
+    this.#elements.output.setAttribute('part', `output ${event.eventName}`);
+    this.#elements.output.value = message || event.message || event.eventName;
     this.dispatchEvent(event);
   }
 }
