@@ -20,7 +20,7 @@ export class AudioRecorderEvent extends Event {
   get mimeType () { return this.origTarget.mimeType || null; }
   get error () { return this.origEvent.error; }
   get message () { return this.origEvent.error ? this.origEvent.error.message : null; }
-  get eventName () { return this.origEvent.type; } // : this._type; }
+  get eventName () { return this.origEvent.type; }
   is (eventName) { return this.eventName === eventName; }
 }
 
@@ -29,28 +29,26 @@ export class AudioRecorderEvent extends Event {
  * @customElement audio-recorder
  */
 export class AudioRecorderElement extends MyMinElement {
-  #audioBlob;
-  #chunks = [];
-  #duration = null;
-  #startTime = null;
-  #recorder;
+  #priv = {
+    chunks: [], duration: null, startTime: null, recorder: null
+  };
 
   /* constructor () { super(); } */
 
-  get audioBlob () { return this.#audioBlob; }
+  get audioBlob () { return this.#priv.audioBlob; }
   get blobSize () { return this.audioBlob.size; }
-  get duration () { return this.#duration; }
+  get duration () { return this.#priv.duration; }
 
   get #template () {
     return `
 <template>
   <form>
     <audio controls part="audio"></audio>
-    <p part="row">
+    <p part="p row">
       <button name="startButton" part="button">Record</button>
       <button name="stopButton" part="button" disabled>Stop</button>
       <button name="downloadButton" part="button" disabled>Download</button>
-      <a href="#" id="downloadLink" download="example" hidden></a>
+      <a href="#" id="downloadLink" download="audio" hidden></a>
       <output name="output"></output>
     </p>
   </form>
@@ -59,11 +57,12 @@ export class AudioRecorderElement extends MyMinElement {
   }
 
   get #elements () { return this.shadowRoot.querySelector('form').elements; }
-  get #audioElement () { return this.shadowRoot.querySelector('audio'); }
-  get #downloadLink () { return this.shadowRoot.querySelector('#downloadLink'); }
 
   connectedCallback () {
     this._attachLocalTemplate(this.#template);
+
+    this.#priv['audioElement'] = this.shadowRoot.querySelector('audio');
+    this.#priv['downloadLink'] = this.shadowRoot.querySelector('#downloadLink');
 
     this.#elements.startButton.addEventListener('click', (ev) => this.#onStartClick(ev));
     this.#elements.stopButton.addEventListener('click', (ev) => this.#onStopClick(ev));
@@ -86,26 +85,26 @@ export class AudioRecorderElement extends MyMinElement {
       console.debug('Stream ended');
     };
 
-    this.#recorder = new MediaRecorder(stream);
+    this.#priv.recorder = new MediaRecorder(stream);
 
-    this.#recorder.addEventListener('dataavailable', (dataEvent) => {
-      this.#chunks.push(dataEvent.data);
+    this.#priv.recorder.addEventListener('dataavailable', (dataEvent) => {
+      this.#priv.chunks.push(dataEvent.data);
       this.#fireEvent(dataEvent);
     });
 
-    this.#recorder.addEventListener('start', (startEvent) => {
+    this.#priv.recorder.addEventListener('start', (startEvent) => {
       this.#fireEvent(startEvent, 'Recording…');
 
-      this.#startTime = startEvent.timeStamp;
+      this.#priv.startTime = startEvent.timeStamp;
     });
 
-    this.#recorder.addEventListener('stop', (stopEvent) => {
+    this.#priv.recorder.addEventListener('stop', (stopEvent) => {
       this.#calculateDuration(stopEvent);
 
-      const type = this.#recorder.mimeType;
+      const type = this.#priv.recorder.mimeType;
 
-      this.#audioBlob = new Blob(this.#chunks, { type });
-      this.#audioElement.src = this.createAudioURL();
+      this.#priv.audioBlob = new Blob(this.#priv.chunks, { type });
+      this.#priv.audioElement.src = this.createAudioURL();
 
       this.#fireEvent(stopEvent, `Recording stopped (${this.duration})`);
 
@@ -117,18 +116,18 @@ export class AudioRecorderElement extends MyMinElement {
     this.#elements.startButton.disabled = true;
     this.#elements.stopButton.disabled = false;
 
-    this.#recorder.start();
+    this.#priv.recorder.start();
     this.#fireEvent({
       audioTracks,
       audioDevice: audioTracks[0].label,
-      target: this.#recorder,
+      target: this.#priv.recorder,
       type: 'starting'
     },
     'Recording');
   }
 
   #errorHandler (error) {
-    this.#fireEvent({ error, type: 'error', target: this.#recorder }, `Error: ${error.message}`);
+    this.#fireEvent({ error, type: 'error', target: this.#priv.recorder }, `Error: ${error.message}`);
     console.warn('Audio Recorder Error:', error);
   }
 
@@ -137,9 +136,9 @@ export class AudioRecorderElement extends MyMinElement {
   }
 
   #calculateDuration (stopEvent) {
-    const milliseconds = parseInt(stopEvent.timeStamp - this.#startTime);
-    this.#duration = milliseconds / 1000;
-    this.#startTime = null;
+    const milliseconds = parseInt(stopEvent.timeStamp - this.#priv.startTime);
+    this.#priv.duration = milliseconds / 1000;
+    this.#priv.startTime = null;
   }
 
   #onStartClick (ev) {
@@ -151,16 +150,16 @@ export class AudioRecorderElement extends MyMinElement {
 
   #onStopClick (ev) {
     ev.preventDefault();
-    this.#recorder.stop();
+    this.#priv.recorder.stop();
   }
 
   #onDownloadClick (ev) {
     ev.preventDefault();
     const blobUrl = this.createAudioURL();
     const size = this.blobSize;
-    this.#downloadLink.href = blobUrl;
-    this.#downloadLink.click();
-    this.#fireEvent({ type: 'download', blobUrl, size, target: this.#recorder });
+    this.#priv.downloadLink.href = blobUrl;
+    this.#priv.downloadLink.click();
+    this.#fireEvent({ type: 'download', blobUrl, size, target: this.#priv.recorder });
   }
 
   #fireEvent (origEvent, message = null) {
