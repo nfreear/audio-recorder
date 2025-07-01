@@ -1,4 +1,4 @@
-import MyMinElement from 'MyMinElement';
+import MyMinElement from 'ndf-elements/base';
 
 const { Blob, customElements, Event, MediaRecorder, navigator } = window;
 

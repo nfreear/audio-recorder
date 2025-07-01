@@ -8,6 +8,9 @@
     "type": "git",
     "url": "git+https://github.com/nfreear/audio-recorder.git"
   },
+  "dependencies": {
+    "ndf-elements": "^1.7.1"
+  },
   "devDependencies": {
     "eslint": "^9.30.0",
     "neostandard": "^0.12.1",
