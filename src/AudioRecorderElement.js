@@ -47,7 +47,7 @@ export class AudioRecorderElement extends MyMinElement {
     <p part="p row">
       <button name="startButton" part="button">Record</button>
       <button name="stopButton" part="button" disabled>Stop</button>
-      <button name="downloadButton" part="button" disabled>Download</button>
+      <button name="downloadButton" part="button download" disabled>Download</button>
       <a href="#" id="downloadLink" download="audio" hidden></a>
       <output name="output"></output>
     </p>
@@ -159,7 +159,7 @@ export class AudioRecorderElement extends MyMinElement {
     const size = this.blobSize;
     this.#priv.downloadLink.href = blobUrl;
     this.#priv.downloadLink.click();
-    this.#fireEvent({ type: 'download', blobUrl, size, target: this.#priv.recorder });
+    this.#fireEvent({ type: 'download', blobUrl, size, target: this.#priv.recorder }, 'Downloading…');
   }
 
   #fireEvent (origEvent, message = null) {
