@@ -32,11 +32,12 @@
   const audioElem = document.querySelector('#audio');
 
   wrapperElem.addEventListener('audio-recorder', (ev) => {
-    const { eventName, mimeType, target } = ev;
+    const { eventName, mimeType } = ev;
+    const recorder = event.target;
 
     if (ev.is('stop')) {
-      audioElem.src = target.createAudioURL();
-      console.debug('>>>Duration:', target.duration);
+      audioElem.src = recorder.createAudioURL();
+      console.debug('>> Duration:', recorder.duration);
     }
 
     if (ev.is('error')) {

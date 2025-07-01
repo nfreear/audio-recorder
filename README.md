@@ -3,7 +3,7 @@
 
 [![Node.js][ci-badge]][ci]
 
-An `<audio-recorder>` custom element to record audio in the browser.
+An `<audio-recorder>` custom element to simplify recording sound in the browser.
 
 ```html
 <audio controls></audio>
