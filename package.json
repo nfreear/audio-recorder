@@ -1,0 +1,20 @@
+{
+  "name": "audio-recorder-el",
+  "description": "An <audio-recorder> custom element to record audio in the browser.",
+  "type": "module",
+  "main": "src/AudioRecorderElement.js",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nfreear/audio-recorder.git"
+  },
+  "devDependencies": {
+    "eslint": "^9.30.0",
+    "neostandard": "^0.12.1",
+    "servor": "^4.0.2"
+  },
+  "scripts": {
+    "start": "servor",
+    "lint": "npx eslint --fix"
+  }
+}

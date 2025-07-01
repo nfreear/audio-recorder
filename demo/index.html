@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="assets/style.css">
+
+  <title>&lt;audio-recorder> demo</title>
+  <h1><code>&lt;audio-recorder></code> demo</h1>
+
+  <audio id="audio" controls></audio>
+
+  <div id="wrapper">
+    <audio-recorder></audio-recorder>
+  </div>
+
+
+<script type="importmap">
+{
+  "imports": {
+    "MyMinElement": "https://nfreear.github.io/elements/src/MyMinElement.js",
+    "AudioRecorderElement": "../src/AudioRecorderElement.js"
+  }
+}
+</script>
+
+<script type="module">
+  import 'AudioRecorderElement';
+</script>
+
+<script type="module">
+  const wrapperElem = document.querySelector('#wrapper');
+  const audioElem = document.querySelector('#audio');
+
+  wrapperElem.addEventListener('audio-recorder', (ev) => {
+    const { eventName, mimeType, target } = ev;
+
+    if (ev.is('stop')) {
+      audioElem.src = target.createAudioURL();
+      console.debug('>>>Duration:', target.duration);
+    }
+
+    if (ev.is('error')) {
+      console.error('audio-recorder ERROR:', ev.message, ev);
+    } else {
+      console.debug('audio-recorder event:', eventName, mimeType, ev);
+    }
+
+    // console.debug('CTOR:', ev.constructor.name, ev.target.constructor.name);
+  });
+
+  /* wrapperElem.addEventListener('audio-recorder:stop', (ev) => {
+    const { mimeType, target } = ev;
+
+    audioElem.src = target.createAudioURL();
+
+    console.debug('audio-recorder:stop event ~', mimeType, ev);
+  });
+
+  wrapperElem.addEventListener('audio-recorder:dataavailable', (ev) => console.debug('Data event:', ev));
+  wrapperElem.addEventListener('audio-recorder:start', (ev) => console.debug('Start event:', ev));
+  wrapperElem.addEventListener('audio-recorder:error', (ev) => console.error('Error event:', ev.error, ev));
+  */
+</script>
+
+</html>
