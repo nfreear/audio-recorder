@@ -1,28 +1,7 @@
 import MyMinElement from 'ndf-elements/base';
+import { AudioRecorderEvent } from './AudioRecorderEvent.js';
 
-const { Blob, customElements, Event, MediaRecorder, navigator } = window;
-
-/**
- * @copyright © Nick Freear, June-2025.
- */
-export class AudioRecorderEvent extends Event {
-  #origEvent;
-
-  constructor (origEvent) {
-    super('audio-recorder', { bubbles: true });
-    // Was: super(`audio-recorder:${origEvent.type}`, { bubbles: true });
-    this.#origEvent = origEvent;
-  }
-
-  get origEvent () { return this.#origEvent; }
-  get origTarget () { return this.origEvent.target || {}; }
-  get audioBitsPerSecond () { return this.origTarget.audioBitsPerSecond; }
-  get mimeType () { return this.origTarget.mimeType || null; }
-  get error () { return this.origEvent.error; }
-  get message () { return this.origEvent.error ? this.origEvent.error.message : null; }
-  get eventName () { return this.origEvent.type; }
-  is (eventName) { return this.eventName === eventName; }
-}
+const { Blob, customElements, MediaRecorder, navigator } = window;
 
 /**
  * @copyright © Nick Freear, June-2025.
@@ -160,6 +139,10 @@ export class AudioRecorderElement extends MyMinElement {
     this.#priv.downloadLink.href = blobUrl;
     this.#priv.downloadLink.click();
     this.#fireEvent({ type: 'download', blobUrl, size, target: this.#priv.recorder }, 'Downloading…');
+  }
+
+  fire (origEvent, message = null) {
+    this.fireEvent(origEvent, message);
   }
 
   #fireEvent (origEvent, message = null) {
