@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="en">
+  <meta charset="utf-8">
   <meta name="robots" content="noindex">
+  <meta name="viewport" content="width=device-width">
+
   <link rel="stylesheet" href="assets/style.css">
 
   <title>&lt;audio-recorder> demo</title>
@@ -18,49 +21,11 @@
   "imports": {
     "ndf-elements/base": "../node_modules/ndf-elements/src/MyMinElement.js",
     "ghp:ndf-elements/base": "https://nfreear.github.io/elements/src/MyMinElement.js",
-    "audio-player-el": "../src/AudioRecorderElement.js"
+    "audio-recorder-el": "../index.js"
   }
 }
 </script>
 
-<script type="module">
-  import 'audio-player-el';
-</script>
-
-<script type="module">
-  const wrapperElem = document.querySelector('#wrapper');
-  const audioElem = document.querySelector('#audio');
-
-  wrapperElem.addEventListener('audio-recorder', (ev) => {
-    const { eventName, mimeType } = ev;
-    const recorder = event.target;
-
-    if (ev.is('stop')) {
-      audioElem.src = recorder.createAudioURL();
-      console.debug('>> Duration:', recorder.duration);
-    }
-
-    if (ev.is('error')) {
-      console.error('audio-recorder ERROR:', ev.message, ev);
-    } else {
-      console.debug('audio-recorder event:', eventName, mimeType, ev);
-    }
-
-    // console.debug('CTOR:', ev.constructor.name, ev.target.constructor.name);
-  });
-
-  /* wrapperElem.addEventListener('audio-recorder:stop', (ev) => {
-    const { mimeType, target } = ev;
-
-    audioElem.src = target.createAudioURL();
-
-    console.debug('audio-recorder:stop event ~', mimeType, ev);
-  });
-
-  wrapperElem.addEventListener('audio-recorder:dataavailable', (ev) => console.debug('Data event:', ev));
-  wrapperElem.addEventListener('audio-recorder:start', (ev) => console.debug('Start event:', ev));
-  wrapperElem.addEventListener('audio-recorder:error', (ev) => console.error('Error event:', ev.error, ev));
-  */
-</script>
+<script type="module" src="assets/app.js"></script>
 
 </html>

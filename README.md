@@ -5,6 +5,17 @@
 
 An `<audio-recorder>` custom element to simplify recording sound in the browser.
 
+The `<audio-recorder>` element encapsulates a user-interface comprising:
+* A _Record_ button,
+* _Stop_ button,
+* _Download_ button,
+* An `<output>` status element (live-region),
+* An `<audio>` element for optional playback.
+
+Any of the UI elements above can be hidden, and styled.
+
+## Usage
+
 ```html
 <audio controls></audio>
 <audio-recorder></audio-recorder>
@@ -29,3 +40,4 @@ document.body.addEventListener('audio-recorder', (event) => {
 
 [ci]: https://github.com/nfreear/audio-recorder/actions/workflows/node.js.yml
 [ci-badge]: https://github.com/nfreear/audio-recorder/actions/workflows/node.js.yml/badge.svg
+[source]: https://github.com/nfreear/11labs-demo/issues/1

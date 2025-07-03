@@ -1,0 +1,120 @@
+:root {
+  --background-color: #222;
+  --border-color: silver;
+  --disabled-bg-color: #888; /* background */
+  --disabled-color: #555;
+  --foreground-color: #fcfcfc;
+  --link-color: #bcf;
+  --input-color: #555;
+  --error-color: #ffcc02; /* Orange */
+}
+
+/*
+  Example styles for the <audio-recorder> custom element.
+*/
+
+audio-recorder {
+  border: 2px solid var(--border-color, gray);
+  display: block;
+  margin: 1rem 0;
+  padding: 1rem;
+}
+
+audio-recorder {
+  &::part(button) {
+    min-height: 3.6rem;
+    padding: .7rem 1.4rem;
+    position: relative;
+  }
+
+  &::part(button):disabled {
+    background-color: var(--disabled-bg-color);
+    color: var(--disabled-color);
+  }
+
+  /* Visually hide the button text, and rely on icons.
+  */
+  &::part(label) {
+    position: absolute;
+    width: 1px;
+    overflow: hidden;
+  }
+
+  &::part(button)::before {
+    font-size: x-large;
+  }
+
+  &::part(startButton)::before {
+    content: '🔴'; /* U+1F534 / https://unicodeplus.com/U+1F534 */
+  }
+
+  &::part(stopButton)::before {
+    content: '■'; /* U+25A0 / https://unicodeplus.com/U+25A0 */
+    font-size: xx-large;
+    line-height: .6;
+  }
+
+  &::part(downloadButton)::before {
+    content: '⬇️'; /* https://emojipedia.org/down-arrow */
+  }
+
+  /* Experiment: tool tips on focus & hover?
+  */
+  &::part(button)::after {
+    content: ' ';
+    font-size: small;
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 0;
+    width: 0;
+  }
+
+  &::part(button):focus::after,
+  &::part(button):hover::after {
+    background: rgba(255,255,255, .8);
+    border-radius: .2rem;
+    content: attr(data-text); /* 'Record'; */
+    padding: .1rem;
+    height: auto;
+    width: auto;
+    transition: all 150ms;
+  }
+
+  /* Errors.
+  */
+  &::part(o-error) {
+    color: var(--error-color);
+  }
+
+  &::part(o-error)::before {
+    content: '⚠️ '; /* https://emojipedia.org/warning */
+  }
+
+  /* Optional - hide the <audio> element.
+  */
+  &::part(audio) {
+    X_display: none;
+  }
+}
+
+/*
+  Page defaults.
+*/
+
+*,
+::part(button) {
+  border-radius: .3rem;
+  outline-offset: .2rem;
+  text-underline-offset: .25rem;
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--foreground-color);
+  font-family: sans-serif;
+  line-height: 1.3;
+  margin: 0 auto;
+  max-width: 32rem;
+  padding: 0 1rem;
+}
