@@ -18,15 +18,15 @@ export class AudioRecorderElement extends MyMinElement {
   get blobSize () { return this.audioBlob.size; }
   get duration () { return this.#priv.duration; }
 
-  get #template () {
+  get #htmlTemplate () {
     return `
 <template>
   <form>
     <audio controls part="audio"></audio>
     <p part="p row">
-      <button name="startButton" part="button">Record</button>
-      <button name="stopButton" part="button" disabled>Stop</button>
-      <button name="downloadButton" part="button download" disabled>Download</button>
+      <button name="startButton" part="button startButton" data-text="Record"><x part="label">Record</x></button>
+      <button name="stopButton" part="button stopButton" disabled data-text="Stop"><x part="label">Stop</x></button>
+      <button name="downloadButton" part="button downloadButton" disabled data-text="Download" type="button"><x part="label">Download</x></button>
       <a href="#" id="downloadLink" download="audio" hidden></a>
       <output name="output"></output>
     </p>
@@ -38,11 +38,13 @@ export class AudioRecorderElement extends MyMinElement {
   get #elements () { return this.shadowRoot.querySelector('form').elements; }
 
   connectedCallback () {
-    this._attachLocalTemplate(this.#template);
+    this._attachLocalTemplate(this.#htmlTemplate);
 
     this.#priv['audioElement'] = this.shadowRoot.querySelector('audio');
     this.#priv['downloadLink'] = this.shadowRoot.querySelector('#downloadLink');
 
+    /* Button event handlers.
+    */
     this.#elements.startButton.addEventListener('click', (ev) => this.#onStartClick(ev));
     this.#elements.stopButton.addEventListener('click', (ev) => this.#onStopClick(ev));
     this.#elements.downloadButton.addEventListener('click', (ev) => this.#onDownloadClick(ev));
@@ -85,7 +87,7 @@ export class AudioRecorderElement extends MyMinElement {
       this.#priv.audioBlob = new Blob(this.#priv.chunks, { type });
       this.#priv.audioElement.src = this.createAudioURL();
 
-      this.#fireEvent(stopEvent, `Recording stopped (${this.duration})`);
+      this.#fireEvent(stopEvent, `Recording stopped (${this.duration}s)`);
 
       this.#elements.downloadButton.disabled = false;
       this.#elements.startButton.disabled = false;
@@ -94,6 +96,7 @@ export class AudioRecorderElement extends MyMinElement {
 
     this.#elements.startButton.disabled = true;
     this.#elements.stopButton.disabled = false;
+    this.#elements.stopButton.focus();
 
     this.#priv.recorder.start();
     this.#fireEvent({
@@ -141,17 +144,16 @@ export class AudioRecorderElement extends MyMinElement {
     this.#fireEvent({ type: 'download', blobUrl, size, target: this.#priv.recorder }, 'Downloading…');
   }
 
-  fire (origEvent, message = null) {
-    this.fireEvent(origEvent, message);
-  }
-
+  /**
+   * @fires audio-recorder
+   */
   #fireEvent (origEvent, message = null) {
     const event = new AudioRecorderEvent(origEvent);
     if (event.is('error')) {
       this.dataset.error = event.error.name;
     }
     this.dataset.state = event.eventName;
-    this.#elements.output.setAttribute('part', `output ${event.eventName}`);
+    this.#elements.output.setAttribute('part', `output o-${event.eventName}`);
     this.#elements.output.value = message || event.message || event.eventName;
     this.dispatchEvent(event);
   }
