@@ -18,14 +18,22 @@ Any of the UI elements above can be hidden, and [styled][].
 
 ## Usage
 
+Install locally:
+```sh
+npm i audio-recorder-el
+```
+Or access via CDN:
+```js
+import 'https://unpkg.com/audio-recorder-el';
+```
+
 HTML example:
 ```html
 <audio controls></audio>
 <audio-recorder></audio-recorder>
 ```
 
-This is a JavaScript example of listening for the `audio-recorder` event emitted by the custom element:
-
+This is a JavaScript example of listening for the `audio-recorder` event emitted by the custom element ([complete demo][demo-js]):
 ```js
 const audioElem = document.querySelector('audio');
 
@@ -46,3 +54,4 @@ document.body.addEventListener('audio-recorder', (event) => {
 [source]: https://github.com/nfreear/11labs-demo/issues/1
 [image-1]: ./demo/assets/audio-recorder-element-1.png
 [styled]: ./demo/assets/style.css
+[demo-js]: ./demo/assets/app.js
