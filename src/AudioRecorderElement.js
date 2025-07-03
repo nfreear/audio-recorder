@@ -1,5 +1,5 @@
 import MyMinElement from 'ndf-elements/base';
-import { AudioRecorderEvent } from './AudioRecorderEvent.js';
+import { AudioRecorderEvent } from '../index.js';
 
 const { Blob, customElements, MediaRecorder, navigator } = window;
 

@@ -109,6 +109,10 @@ audio-recorder {
   text-underline-offset: .25rem;
 }
 
+:link {
+  color: var(--link-color);
+}
+
 body {
   background-color: var(--background-color);
   color: var(--foreground-color);

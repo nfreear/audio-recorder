@@ -16,6 +16,7 @@
     "type": "git",
     "url": "git+https://github.com/nfreear/audio-recorder.git"
   },
+  "homepage": "https://nfreear.github.io/audio-recorder/demo/",
   "keywords": [
     "custom",
     "element"
