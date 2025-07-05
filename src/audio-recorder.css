@@ -1,4 +1,8 @@
-/* Use the "features" attribute.
+/*
+  Styles the for <audio-recorder> custom element.
+*/
+
+/* Use the "features" attribute to show/hide parts of the UI.
 */
 audio-recorder {
   &::part(audio),
@@ -12,5 +16,94 @@ audio-recorder {
 
   &[ features *= download ]::part(downloadButton) {
     display: inline-block;
+  }
+}
+
+/* "icon" feature (Alias: "icons")
+*/
+audio-recorder[ features *= icon ] {
+  &::part(button) {
+    min-height: 3rem;
+    min-width: 3rem;
+  }
+
+  /* Visually hide the button text, and rely on icons.
+  */
+  &::part(label) {
+    position: absolute;
+    width: 1px;
+    overflow: hidden;
+  }
+
+  &::part(button)::before {
+    font-size: x-large;
+  }
+
+  &::part(startButton)::before {
+    content: '🔴'; /* U+1F534 / https://unicodeplus.com/U+1F534 */
+  }
+
+  &::part(stopButton)::before {
+    content: '■'; /* U+25A0 / https://unicodeplus.com/U+25A0 */
+    font-size: xx-large;
+    line-height: .6;
+  }
+
+  &::part(downloadButton)::before {
+    content: '⬇️'; /* https://emojipedia.org/down-arrow */
+  }
+}
+
+/* "tip" feature (Alias: "tooltips") (Experimental)
+*/
+audio-recorder[ features *= tip ] {
+  &::part(button) {
+    min-width: 3.1rem;
+    position: relative;
+  }
+
+  &::part(button)::after {
+    content: ' ';
+    font-size: small;
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 0;
+    width: 0;
+  }
+
+  &::part(button):focus::after,
+  &::part(button):hover::after {
+    background: rgba(255,255,255, .8);
+    border-radius: .2rem;
+    content: attr(data-text); /* "Record", "Stop", "Download". */
+    padding: .1rem;
+    height: auto;
+    width: auto;
+    transition: all 150ms;
+  }
+
+  &::part(downloadButton)::after {
+    font-size: x-small;
+  }
+}
+
+audio-recorder {
+  /* https://developer.mozilla.org/en-US/docs/Web/CSS/system-color
+  */
+  &::part(button):disabled {
+    background-color: var(--disabled-bg-color, ButtonFace);
+    color: var(--disabled-color, GrayText);
+    opacity: .6;
+  }
+
+  /* Error-handling.
+  */
+  &::part(o-error) {
+    color: var(--error-color, darkred);
+  }
+
+  &::part(o-error)::before {
+    content: '⚠️ '; /* https://emojipedia.org/warning */
   }
 }
