@@ -1,4 +1,5 @@
-import { attachTemplate, AudioRecorderEvent } from '../index.js';
+import { attachTemplate, bindTokenListAttribute } from 'ndf-elements/util';
+import { AudioRecorderEvent } from '../index.js';
 
 const { Blob, customElements, HTMLElement, MediaRecorder, navigator } = window;
 
@@ -8,14 +9,19 @@ const { Blob, customElements, HTMLElement, MediaRecorder, navigator } = window;
  */
 export class AudioRecorderElement extends HTMLElement {
   #priv = {
-    chunks: [], duration: null, startTime: null, recorder: null
+    chunks: [], duration: null, featureList: null, startTime: null, recorder: null
   };
 
-  /* constructor () { super(); } */
+  constructor () {
+    super();
+    this.#priv.featureList = bindTokenListAttribute(this, 'features');
+  }
 
   get audioBlob () { return this.#priv.audioBlob; }
   get blobSize () { return this.audioBlob.size; }
   get duration () { return this.#priv.duration; }
+
+  get featureList () { return this.#priv.featureList.tokenList; }
 
   get #htmlTemplate () {
     return `

@@ -49,6 +49,10 @@ audio-recorder {
   color: var(--link-color);
 }
 
+audio {
+  display: block;
+}
+
 body {
   background-color: var(--background-color);
   color: var(--foreground-color);
