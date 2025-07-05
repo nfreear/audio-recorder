@@ -1,13 +1,12 @@
-import MyMinElement from 'ndf-elements/base';
-import { AudioRecorderEvent } from '../index.js';
+import { attachTemplate, AudioRecorderEvent } from '../index.js';
 
-const { Blob, customElements, MediaRecorder, navigator } = window;
+const { Blob, customElements, HTMLElement, MediaRecorder, navigator } = window;
 
 /**
  * @copyright © Nick Freear, June-2025.
  * @customElement audio-recorder
  */
-export class AudioRecorderElement extends MyMinElement {
+export class AudioRecorderElement extends HTMLElement {
   #priv = {
     chunks: [], duration: null, startTime: null, recorder: null
   };
@@ -38,7 +37,7 @@ export class AudioRecorderElement extends MyMinElement {
   get #elements () { return this.shadowRoot.querySelector('form').elements; }
 
   connectedCallback () {
-    this._attachLocalTemplate(this.#htmlTemplate);
+    attachTemplate(this.#htmlTemplate).to.shadowDOM(this);
 
     this.#priv['audioElement'] = this.shadowRoot.querySelector('audio');
     this.#priv['downloadLink'] = this.shadowRoot.querySelector('#downloadLink');
