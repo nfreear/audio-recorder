@@ -1,0 +1,16 @@
+/* Use the "features" attribute.
+*/
+audio-recorder {
+  &::part(audio),
+  &::part(downloadButton) {
+    display: none;
+  }
+
+  &[ features *= playback ]::part(audio) {
+    display: block;
+  }
+
+  &[ features *= download ]::part(downloadButton) {
+    display: inline-block;
+  }
+}

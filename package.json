@@ -5,6 +5,10 @@
   "type": "module",
   "customElements": "custom-elements.json",
   "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./style": "./src/audio-recorder.css"
+  },
   "scripts": {
     "start": "npx servor",
     "lint": "npx eslint --fix",
@@ -18,8 +22,10 @@
   },
   "homepage": "https://nfreear.github.io/audio-recorder/demo/",
   "keywords": [
+    "audio",
     "custom",
-    "element"
+    "element",
+    "sound"
   ],
   "license": "MIT",
   "author": "Nick Freear",
